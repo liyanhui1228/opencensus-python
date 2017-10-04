@@ -281,7 +281,7 @@ def intercept_channel(channel, *interceptors):
       StreamUnaryClientInterceptor, or
       StreamStreamClientInterceptor.
   """
-    from grpc import _interceptor  # pylint: disable=cyclic-import
+    from opencensus.trace.grpc.grpc_ext import _interceptor
     return _interceptor.intercept_channel(channel, *interceptors)
 
 
@@ -307,7 +307,7 @@ def intercept_server(
       StreamUnaryServerInterceptor, or
       StreamStreamServerInterceptor.
   """
-    from grpc import _interceptor  # pylint: disable=cyclic-import
+    from opencensus.trace.grpc.grpc_ext import _interceptor
     return _interceptor.intercept_server(server, *interceptors)
 
 

@@ -19,12 +19,12 @@ import logging
 # yet, this is based on the code in the pull request in the grpc repository.
 from opencensus.trace.grpc import grpc_ext
 from opencensus.trace.propagation import text_format
-from opencensus.trace.tracer import context_tracer
+from opencensus.trace import request_tracer
 
 from opencensus.trace.enums import Enum
 
 
-class OpenCensusServerInterceptor(grpc_ext.UnaryServerInterceptor):
+class OpenCensusServerInterceptor(grpc_ext.UnaryUnaryServerInterceptor):
 
     def __init__(self, sampler=None, reporter=None):
         logging.warn('testtest')
@@ -46,7 +46,7 @@ class OpenCensusServerInterceptor(grpc_ext.UnaryServerInterceptor):
         if metadata is not None:
             span_context = text_format.from_carrier(dict(metadata))
 
-        tracer = context_tracer.ContextTracer(span_context=span_context,
+        tracer = request_tracer.RequestTracer(span_context=span_context,
                                               sampler=self.sampler,
                                               reporter=self.reporter)
 

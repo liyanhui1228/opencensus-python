@@ -15,6 +15,8 @@
 
 import grpc
 
+from opencensus.trace.grpc import grpc_ext
+
 
 class _InterceptingUnaryUnaryMultiCallable(grpc.UnaryUnaryMultiCallable):
 
@@ -125,7 +127,7 @@ class _InterceptingChannel(grpc.Channel):
             return self._channel.unary_unary(method, request_serializer,
                                              response_deserializer)
 
-        if isinstance(self._interceptor, grpc.UnaryUnaryClientInterceptor):
+        if isinstance(self._interceptor, grpc_ext.UnaryUnaryClientInterceptor):
             return _InterceptingUnaryUnaryMultiCallable(
                 method, callable_factory, self._interceptor)
         else:
@@ -140,7 +142,7 @@ class _InterceptingChannel(grpc.Channel):
             return self._channel.unary_stream(method, request_serializer,
                                               response_deserializer)
 
-        if isinstance(self._interceptor, grpc.UnaryStreamClientInterceptor):
+        if isinstance(self._interceptor, grpc_ext.UnaryStreamClientInterceptor):
             return _InterceptingUnaryStreamMultiCallable(
                 method, callable_factory, self._interceptor)
         else:
@@ -155,7 +157,7 @@ class _InterceptingChannel(grpc.Channel):
             return self._channel.stream_unary(method, request_serializer,
                                               response_deserializer)
 
-        if isinstance(self._interceptor, grpc.StreamUnaryClientInterceptor):
+        if isinstance(self._interceptor, grpc_ext.StreamUnaryClientInterceptor):
             return _InterceptingStreamUnaryMultiCallable(
                 method, callable_factory, self._interceptor)
         else:
@@ -170,7 +172,7 @@ class _InterceptingChannel(grpc.Channel):
             return self._channel.stream_stream(method, request_serializer,
                                                response_deserializer)
 
-        if isinstance(self._interceptor, grpc.StreamStreamClientInterceptor):
+        if isinstance(self._interceptor, grpc_ext.StreamStreamClientInterceptor):
             return _InterceptingStreamStreamMultiCallable(
                 method, callable_factory, self._interceptor)
         else:
@@ -179,10 +181,10 @@ class _InterceptingChannel(grpc.Channel):
 
 def intercept_channel(channel, *interceptors):
     for interceptor in reversed(list(interceptors)):
-        if not isinstance(interceptor, grpc.UnaryUnaryClientInterceptor) and \
-           not isinstance(interceptor, grpc.UnaryStreamClientInterceptor) and \
-           not isinstance(interceptor, grpc.StreamUnaryClientInterceptor) and \
-           not isinstance(interceptor, grpc.StreamStreamClientInterceptor):
+        if not isinstance(interceptor, grpc_ext.UnaryUnaryClientInterceptor) and \
+           not isinstance(interceptor, grpc_ext.UnaryStreamClientInterceptor) and \
+           not isinstance(interceptor, grpc_ext.StreamUnaryClientInterceptor) and \
+           not isinstance(interceptor, grpc_ext.StreamStreamClientInterceptor):
             raise TypeError('interceptor must be '
                             'grpc.UnaryUnaryClientInterceptor or '
                             'grpc.UnaryStreamClientInterceptor or '
@@ -217,7 +219,7 @@ class _InterceptingRpcMethodHandler(grpc.RpcMethodHandler):
 
     @property
     def unary_unary(self):
-        if not isinstance(self._interceptor, grpc.UnaryUnaryServerInterceptor):
+        if not isinstance(self._interceptor, grpc_ext.UnaryUnaryServerInterceptor):
             return self._rpc_method_handler.unary_unary
 
         def adaptation(request, servicer_context):
@@ -233,7 +235,7 @@ class _InterceptingRpcMethodHandler(grpc.RpcMethodHandler):
 
     @property
     def unary_stream(self):
-        if not isinstance(self._interceptor, grpc.UnaryStreamServerInterceptor):
+        if not isinstance(self._interceptor, grpc_ext.UnaryStreamServerInterceptor):
             return self._rpc_method_handler.unary_stream
 
         def adaptation(request, servicer_context):
@@ -249,7 +251,7 @@ class _InterceptingRpcMethodHandler(grpc.RpcMethodHandler):
 
     @property
     def stream_unary(self):
-        if not isinstance(self._interceptor, grpc.StreamUnaryServerInterceptor):
+        if not isinstance(self._interceptor, grpc_ext.StreamUnaryServerInterceptor):
             return self._rpc_method_handler.stream_unary
 
         def adaptation(request_iterator, servicer_context):
@@ -266,7 +268,7 @@ class _InterceptingRpcMethodHandler(grpc.RpcMethodHandler):
     @property
     def stream_stream(self):
         if not isinstance(self._interceptor,
-                          grpc.StreamStreamServerInterceptor):
+                          grpc_ext.StreamStreamServerInterceptor):
             return self._rpc_method_handler.stream_stream
 
         def adaptation(request_iterator, servicer_context):
@@ -321,10 +323,10 @@ class _InterceptingServer(grpc.Server):
 
 def intercept_server(server, *interceptors):
     for interceptor in reversed(interceptors):
-        if not isinstance(interceptor, grpc.UnaryUnaryServerInterceptor) and \
-           not isinstance(interceptor, grpc.UnaryStreamServerInterceptor) and \
-           not isinstance(interceptor, grpc.StreamUnaryServerInterceptor) and \
-           not isinstance(interceptor, grpc.StreamStreamServerInterceptor):
+        if not isinstance(interceptor, grpc_ext.UnaryUnaryServerInterceptor) and \
+           not isinstance(interceptor, grpc_ext.UnaryStreamServerInterceptor) and \
+           not isinstance(interceptor, grpc_ext.StreamUnaryServerInterceptor) and \
+           not isinstance(interceptor, grpc_ext.StreamStreamServerInterceptor):
             raise TypeError('interceptor must be '
                             'grpc.UnaryUnaryServerInterceptor or '
                             'grpc.UnaryStreamServerInterceptor or '
