@@ -13,11 +13,13 @@
 # limitations under the License.
 
 import logging
+import grpc
 import six
 import sys
 
+from opencensus.trace import grpc
 from opencensus.trace.grpc import grpc_ext
-from opencensus.trace.propagation import text_format
+from opencensus.trace.propagation import binary_format
 from opencensus.trace import execution_context
 
 from opencensus.trace.enums import Enum
@@ -35,6 +37,7 @@ class OpenCensusClientInterceptor(grpc_ext.UnaryUnaryClientInterceptor,
             tracer = execution_context.get_opencensus_tracer()
 
         self._tracer = tracer
+        self._propagator = binary_format.BinaryFormatPropagator()
 
     def _start_client_span(self, method):
         log.info('Start client span')
@@ -43,122 +46,91 @@ class OpenCensusClientInterceptor(grpc_ext.UnaryUnaryClientInterceptor,
         span.kind = Enum.SpanKind.RPC_CLIENT
         return span
 
-    def intercept_unary_unary_call(self, invoker, method, request, **kwargs):
-        span_context = self._tracer.span_context
+    def _trace_async_result(self, result):
+        result.add_done_callback(self._future_done_callback())
 
-        print(invoker)
-        print(method)
-        print(request)
-        print(kwargs)
+        return result
 
+    def _future_done_callback(self):
+        def callback(future_response):
+            code = future_response.code()
+
+            if code != grpc.StatusCode.OK:
+                span.add_label('error in response', str(code))
+
+            response = future_response.result()
+            self._tracer.end_span()
+
+        return callback
+
+    def intercept_call(self, request_type, invoker, method, request, **kwargs):
         metadata = getattr(kwargs, 'metadata', ())
 
-        propagator = text_format.TextFormatPropagator()
-        headers = propagator.to_carrier(span_context, {})
-
-        metadata = metadata + tuple(six.iteritems(headers))
-
         with self._start_client_span(method) as span:
-            span.name = '[gRPC_unary_unary_sync]{}'.format(str(method))
+            span_context = self._tracer.span_context
+            header = self._propagator.to_header(span_context)
+            grpc_trace_metadata = {
+                grpc.GRPC_TRACE_KEY: header,
+            }
+            metadata = metadata + tuple(six.iteritems(grpc_trace_metadata))
+
+            span.name = '[gRPC_client][{}]{}'.format(request_type, str(method))
 
             try:
-                result = invoker(method, metadata)
+                result = invoker(method, request, metadata=metadata, **kwargs)
             except:
                 e = sys.exc_info()[0]
                 span.add_label('error', str(e))
                 raise
 
         return result
+
+    def intercept_future(
+            self, request_type, invoker, method, request, **kwargs):
+        metadata = getattr(kwargs, 'metadata', ())
+
+        with self._start_client_span(method) as span:
+            span_context = self._tracer.span_context
+            header = self._propagator.to_header(span_context)
+            grpc_trace_metadata = {
+                grpc.GRPC_TRACE_KEY: header,
+            }
+            metadata = metadata + tuple(six.iteritems(grpc_trace_metadata))
+
+            span.name = '[gRPC_client][{}]{}'.format(request_type, str(method))
+
+            try:
+                result = invoker(method, request, metadata=metadata, **kwargs)
+            except:
+                e = sys.exc_info()[0]
+                span.add_label('error', str(e))
+                raise
+
+        return self._trace_async_result(result)
+
+    def intercept_unary_unary_call(self, invoker, method, request, **kwargs):
+        return self.intercept_call(
+            grpc.UNARY_UNARY, invoker, method, request, **kwargs)
 
     def intercept_unary_unary_future(self, invoker, method, request, **kwargs):
-        span_context = self._tracer.span_context
-
-        propagator = text_format.TextFormatPropagator()
-        headers = propagator.to_carrier(span_context, metadata)
-
-        with self._start_client_span(method) as span:
-            span.name = '[gRPC_unary_unary_async]{}'.format(str(method))
-
-            try:
-                result = invoker(request, metadata)
-            except:
-                e = sys.exc_info()[0]
-                span.add_label('error', str(e))
-                raise
-
-        return result
+        return self.intercept_future(
+            grpc.UNARY_UNARY, invoker, method, request, **kwargs)
 
     def intercept_unary_stream_call(self, invoker, method, request, **kwargs):
-        span_context = self._tracer.span_context
-
-        propagator = text_format.TextFormatPropagator()
-        headers = propagator.to_carrier(span_context, metadata)
-
-        with self._start_client_span(method) as span:
-            span.name = '[gRPC_unary_stream]{}'.format(str(method))
-
-            try:
-                result = invoker(request, metadata)
-            except:
-                e = sys.exc_info()[0]
-                span.add_label('error', str(e))
-                raise
-
-        return result
+        return self.intercept_call(
+            grpc.UNARY_STREAM, invoker, method, request, **kwargs)
 
     def intercept_stream_unary_call(self, invoker, method, request_iterator,
-                                    **kawrgs):
-        span_context = self._tracer.span_context
-
-        propagator = text_format.TextFormatPropagator()
-        headers = propagator.to_carrier(span_context, metadata)
-
-        with self._start_client_span(method) as span:
-            span.name = '[gRPC_stream_unary_sync]{}'.format(str(method))
-
-            try:
-                result = invoker(request_iterator, metadata)
-            except:
-                e = sys.exc_info()[0]
-                span.add_label('error', str(e))
-                raise
-
-        return result
+                                    **kwargs):
+        return self.intercept_call(
+            grpc.STREAM_UNARY, invoker, method, request_iterator, **kwargs)
 
     def intercept_stream_unary_future(self, invoker, method, request_iterator,
                                       **kwargs):
-        span_context = self._tracer.span_context
-
-        propagator = text_format.TextFormatPropagator()
-        headers = propagator.to_carrier(span_context, metadata)
-
-        with self._start_client_span(method) as span:
-            span.name = '[gRPC_stream_unary_async]{}'.format(str(method))
-
-            try:
-                result = invoker(request_iterator, metadata)
-            except:
-                e = sys.exc_info()[0]
-                span.add_label('error', str(e))
-                raise
-
-        return result
+        return self.intercept_future(
+            grpc.STREAM_UNARY, invoker, method, request_iterator, **kwargs)
 
     def intercept_stream_stream_call(self, invoker, method, request_iterator,
                                      **kwargs):
-        span_context = self._tracer.span_context
-
-        propagator = text_format.TextFormatPropagator()
-        headers = propagator.to_carrier(span_context, metadata)
-
-        with self._start_client_span(method) as span:
-            span.name = '[gRPC_stream_stream]{}'.format(str(method))
-
-            try:
-                result = invoker(request_iterator, metadata)
-            except:
-                e = sys.exc_info()[0]
-                span.add_label('error', str(e))
-                raise
-
-        return result
+        return self.intercept_call(
+            grpc.STREAM_STREAM, invoker, method, request_iterator, **kwargs)

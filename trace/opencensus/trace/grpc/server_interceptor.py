@@ -17,34 +17,39 @@ import logging
 
 # Note: Currently the interceptor support for Python in grpc is not available
 # yet, this is based on the code in the pull request in the grpc repository.
+from opencensus.trace import grpc
 from opencensus.trace.grpc import grpc_ext
-from opencensus.trace.propagation import text_format
+from opencensus.trace.propagation import binary_format
 from opencensus.trace import request_tracer
 
 from opencensus.trace.enums import Enum
 
 
-class OpenCensusServerInterceptor(grpc_ext.UnaryUnaryServerInterceptor):
+class OpenCensusServerInterceptor(grpc_ext.UnaryUnaryServerInterceptor,
+                                  grpc_ext.UnaryStreamServerInterceptor,
+                                  grpc_ext.StreamUnaryServerInterceptor,
+                                  grpc_ext.StreamStreamServerInterceptor):
 
     def __init__(self, sampler=None, reporter=None):
-        logging.warn('testtest')
         self.sampler = sampler
         self.reporter = reporter
 
     def _start_server_span(self, tracer, servicer_context, method):
-        logging.warn('test here')
-
         span = tracer.start_span(name=str(method))
         span.add_label(label_key='component', label_value='grpc')
         span.kind = Enum.SpanKind.RPC_SERVER
         return span
 
-    def intercept_unary(self, request, servicer_context, server_info, handler):
+    def intercept_handler(self, request_type, handler, method, request,
+                          servicer_context):
         metadata = servicer_context.invocation_metadata()
         span_context = None
 
         if metadata is not None:
-            span_context = text_format.from_carrier(dict(metadata))
+            propagator = binary_format.BinaryFormatPropagator()
+            metadata_dict = dict(metadata)
+            trace_header = metadata_dict[grpc.GRPC_TRACE_KEY]
+            span_context = propagator.from_header(trace_header)
 
         tracer = request_tracer.RequestTracer(span_context=span_context,
                                               sampler=self.sampler,
@@ -52,12 +57,11 @@ class OpenCensusServerInterceptor(grpc_ext.UnaryUnaryServerInterceptor):
 
         tracer.start_trace()
 
-        with self._start_server_span(tracer, servicer_context,
-                                server_info.full_method) as span:
+        with self._start_server_span(tracer, servicer_context, method) as span:
             response = None
-            span.add_label(label_key='metadata', label_value=str(metadata))
+            span.name = '[gRPC_server][{}]{}'.format(request_type, str(method))
             try:
-                response = handler(request)
+                response = handler(request, servicer_context)
             except:
                 e = sys.exc_info()[0]
                 logging.error(e)
@@ -65,3 +69,24 @@ class OpenCensusServerInterceptor(grpc_ext.UnaryUnaryServerInterceptor):
 
         tracer.end_trace()
         return response
+
+    def intercept_unary_unary_handler(self, handler, method, request,
+                                      servicer_context):
+        return self.intercept_handler(grpc.UNARY_UNARY, handler, method,
+                                      request, servicer_context)
+
+    def intercept_unary_stream_handler(self, handler, method, request,
+                                       servicer_context):
+        return self.intercept_handler(grpc.UNARY_STREAM, handler, method,
+                                      request, servicer_context)
+
+    def intercept_stream_unary_handler(self, handler, method, request_iterator,
+                                       servicer_context):
+        return self.intercept_handler(grpc.STREAM_UNARY, handler, method,
+                                      request_iterator, servicer_context)
+
+    def intercept_stream_stream_handler(self, handler, method,
+                                        request_iterator,
+                                        servicer_context):
+        return self.intercept_handler(grpc.STREAM_STREAM, handler, method,
+                                      request_iterator, servicer_context)
