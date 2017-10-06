@@ -62,8 +62,7 @@ class OpenCensusServerInterceptor(grpc_ext.UnaryUnaryServerInterceptor,
             span.name = '[gRPC_server][{}]{}'.format(request_type, str(method))
             try:
                 response = handler(request, servicer_context)
-            except:
-                e = sys.exc_info()[0]
+            except Exception as e:
                 logging.error(e)
                 raise
 

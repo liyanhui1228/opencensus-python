@@ -78,8 +78,7 @@ class OpenCensusClientInterceptor(grpc_ext.UnaryUnaryClientInterceptor,
 
             try:
                 result = invoker(method, request, metadata=metadata, **kwargs)
-            except:
-                e = sys.exc_info()[0]
+            except Exception as e:
                 span.add_label('error', str(e))
                 raise
 
@@ -101,8 +100,7 @@ class OpenCensusClientInterceptor(grpc_ext.UnaryUnaryClientInterceptor,
 
             try:
                 result = invoker(method, request, metadata=metadata, **kwargs)
-            except:
-                e = sys.exc_info()[0]
+            except Exception as e:
                 span.add_label('error', str(e))
                 raise
 
