@@ -34,6 +34,8 @@ class _InterceptingUnaryUnaryMultiCallable(grpc.UnaryUnaryMultiCallable):
         def invoker(method, *args, **kwargs):
             return self._callable_factory(method).with_call(*args, **kwargs)
 
+        import pdb
+        pdb.set_trace()
         return self._interceptor.intercept_unary_unary_call(
             invoker, self._method, *args, **kwargs)
 
