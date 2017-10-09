@@ -24,6 +24,9 @@ from opencensus.trace.grpc.client_interceptor import (
     OpenCensusClientInterceptor)
 from opencensus.trace.grpc.grpc_ext import intercept_channel
 
+from opencensus.trace.ext.requests.trace import (
+    trace_integration as trace_requests)
+
 
 log = logging.getLogger(__name__)
 
@@ -37,6 +40,15 @@ def trace_integration():
     """Wrap the mysql connector to trace it."""
     log.info('Integrated module: {}'.format(MODULE_NAME))
 
+    # Integrate with gRPC
+    trace_grpc()
+
+    # Integrate with HTTP
+    trace_http()
+
+
+def trace_grpc():
+    """Integrate with gRPC."""
     # Wrap google.cloud._helpers.make_secure_channel
     make_secure_channel_func = getattr(_helpers, MAKE_SECURE_CHANNEL)
     make_secure_channel_module = inspect.getmodule(make_secure_channel_func)
@@ -56,6 +68,11 @@ def trace_integration():
         insecure_channel_module,
         INSECURE_CHANNEL,
         insecure_channel_wrapped)
+
+
+def trace_http():
+    """Integrate with HTTP (requests library)."""
+    trace_requests()
 
 
 def wrap_make_secure_channel(make_secure_channel_func):
