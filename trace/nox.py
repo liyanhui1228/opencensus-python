@@ -18,31 +18,31 @@ import nox
 import os
 
 
-@nox.session
-@nox.parametrize('python_version', ['2.7', '3.4', '3.5', '3.6'])
-def unit_tests(session, python_version):
-    """Run the unit test suite."""
-
-    # Run unit tests against all supported versions of Python.
-    session.interpreter = 'python{}'.format(python_version)
-
-    # Install all test dependencies, then install this package in-place.
-    session.install('-r', 'requirements-test.txt')
-
-    session.install('-e', '.')
-
-    # Run py.test against the unit tests.
-    session.run(
-        'py.test',
-        '--quiet',
-        '--cov=opencensus.trace',
-        '--cov-append',
-        '--cov-config=.coveragerc',
-        '--cov-report=',
-        '--cov-fail-under=97',
-        'tests/unit/',
-        *session.posargs
-    )
+# @nox.session
+# @nox.parametrize('python_version', ['2.7', '3.4', '3.5', '3.6'])
+# def unit_tests(session, python_version):
+#     """Run the unit test suite."""
+#
+#     # Run unit tests against all supported versions of Python.
+#     session.interpreter = 'python{}'.format(python_version)
+#
+#     # Install all test dependencies, then install this package in-place.
+#     session.install('-r', 'requirements-test.txt')
+#
+#     session.install('-e', '.')
+#
+#     # Run py.test against the unit tests.
+#     session.run(
+#         'py.test',
+#         '--quiet',
+#         '--cov=opencensus.trace',
+#         '--cov-append',
+#         '--cov-config=.coveragerc',
+#         '--cov-report=',
+#         '--cov-fail-under=97',
+#         'tests/unit/',
+#         *session.posargs
+#     )
 
 
 @nox.session
