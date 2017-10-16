@@ -31,10 +31,10 @@ DB_HOST = '127.0.0.1'
 PROJECT = os.environ.get('GCLOUD_PROJECT_PYTHON')
 
 # MySQL settings
-MYSQL_PASSWORD = 'root'
+MYSQL_PASSWORD = '12345'
 
 # PostgreSQL settings
-POSTGRES_PASSWORD = 'root'
+POSTGRES_PASSWORD = '12345'
 
 app = flask.Flask(__name__)
 
