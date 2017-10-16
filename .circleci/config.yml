@@ -11,12 +11,12 @@ jobs:
       - image: mysql:5.7
         environment:
           MYSQL_ROOT_HOST: "%"
-          MYSQL_ROOT_PASSWORD: 12345
+          MYSQL_ROOT_PASSWORD: 666666
         ports:
           - 3306:3306
       - image: circleci/postgres:9.6
         environment:
-          POSTGRES_PASSWORD: 12345
+          POSTGRES_PASSWORD: 666666
         ports:
           - 5432:5432
 
