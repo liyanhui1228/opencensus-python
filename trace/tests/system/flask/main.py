@@ -24,9 +24,9 @@ from opencensus.trace.ext.flask.flask_middleware import FlaskMiddleware
 from opencensus.trace import config_integration
 from opencensus.trace.reporters import google_cloud_reporter
 
-INTEGRATIONS = ['mysql', 'postgresql', 'sqlalchemy']
-
 DB_HOST = '127.0.0.1'
+
+INTEGRATIONS = ['mysql', 'postgresql', 'sqlalchemy']
 
 PROJECT = os.environ.get('GCLOUD_PROJECT_PYTHON')
 
@@ -53,7 +53,6 @@ def hello():
 def mysql_query():
     # try:
         conn = mysql.connector.connect(
-            host=DB_HOST,
             user='root',
             password=MYSQL_PASSWORD)
         cursor = conn.cursor()
@@ -108,8 +107,8 @@ def postgresql_query():
 def sqlalchemy_mysql_query():
     try:
         engine = sqlalchemy.create_engine(
-            'mysql+mysqlconnector://{}:{}@{}'.format(
-                'root', MYSQL_PASSWORD, DB_HOST))
+            'mysql+mysqlconnector://{}:{}@localhost'.format(
+                'root', MYSQL_PASSWORD))
         conn = engine.connect()
 
         query = 'SELECT 2*3'

@@ -63,7 +63,6 @@ def greetings(request):
 def mysql_trace(request):
     try:
         conn = mysql.connector.connect(
-            host=DB_HOST,
             user='root',
             password=MYSQL_PASSWORD)
         cursor = conn.cursor()
@@ -110,8 +109,8 @@ def postgresql_trace(request):
 def sqlalchemy_mysql_trace(request):
     try:
         engine = sqlalchemy.create_engine(
-            'mysql+mysqlconnector://{}:{}@{}'.format(
-                'root', MYSQL_PASSWORD, DB_HOST))
+            'mysql+mysqlconnector://{}:{}@localhost'.format(
+                'root', MYSQL_PASSWORD))
         conn = engine.connect()
 
         query = 'SELECT 2*3'
