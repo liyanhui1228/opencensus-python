@@ -61,7 +61,7 @@ def greetings(request):
 
 
 def mysql_trace(request):
-    try:
+    # try:
         conn = mysql.connector.connect(
             host=DB_HOST,
             user='root',
@@ -77,10 +77,10 @@ def mysql_trace(request):
             result.append(item)
 
         return HttpResponse(str(result))
-
-    except Exception:
-        msg = "Query failed. Check your env vars for connection settings."
-        return HttpResponse(msg, status=500)
+    #
+    # except Exception:
+    #     msg = "Query failed. Check your env vars for connection settings."
+    #     return HttpResponse(msg, status=500)
 
 
 def postgresql_trace(request):

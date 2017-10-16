@@ -18,8 +18,6 @@ import mysql.connector
 
 from opencensus.trace import execution_context
 
-log = logging.getLogger(__name__)
-
 MODULE_NAME = 'mysql'
 
 CONN_WRAP_METHOD = 'connect'
@@ -29,7 +27,7 @@ QUERY_WRAP_METHODS = ['execute', 'executemany']
 
 def trace_integration():
     """Wrap the mysql connector to trace it."""
-    log.info('Integrated module: {}'.format(MODULE_NAME))
+    logging.info('Integrated module: {}'.format(MODULE_NAME))
     conn_func = getattr(mysql.connector, CONN_WRAP_METHOD)
     conn_module = inspect.getmodule(conn_func)
     wrapped = wrap_conn(conn_func)
@@ -39,15 +37,15 @@ def trace_integration():
 def wrap_conn(conn_func):
     """Wrap the mysql conn object with TraceConnection."""
     def call(*args, **kwargs):
-        try:
+        # try:
             conn = conn_func(*args, **kwargs)
             cursor_func = getattr(conn, CURSOR_WRAP_METHOD)
             wrapped = wrap_cursor(cursor_func)
             setattr(conn, cursor_func.__name__, wrapped)
             return conn
-        except Exception:  # pragma: NO COVER
-            log.warning('Fail to wrap conn, mysql not traced.')
-            return conn_func(*args, **kwargs)
+        # except Exception:  # pragma: NO COVER
+        #     logging.warning('Fail to wrap conn, mysql not traced.')
+        #     return conn_func(*args, **kwargs)
     return call
 
 
@@ -61,7 +59,7 @@ def wrap_cursor(cursor_func):
                 setattr(cursor, query_func.__name__, wrapped)
             return cursor
         except Exception:  # pragma: NO COVER
-            log.warning('Fail to wrap cursor, mysql not traced.')
+            logging.warning('Fail to wrap cursor, mysql not traced.')
             return cursor_func(*args, **kwargs)
     return call
 

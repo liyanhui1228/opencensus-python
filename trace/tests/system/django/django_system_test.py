@@ -102,6 +102,14 @@ class TestDjangoTrace(unittest.TestCase):
             str(self.span_id))
 
     def test_mysql_trace(self):
+        import mysql.connector
+
+        MYSQL_PASSWORD = os.environ.get('SYSTEST_MYSQL_PASSWORD')
+        conn = mysql.connector.connect(
+            host='127.0.0.1',
+            user='root',
+            password=MYSQL_PASSWORD)
+
         requests.get(
             'http://127.0.0.1:8000/mysql',
             headers=self.headers_trace)
