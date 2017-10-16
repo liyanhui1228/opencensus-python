@@ -114,8 +114,8 @@ class TestFlaskTrace(unittest.TestCase):
             str(self.span_id))
 
     def test_mysql_trace(self):
-        subprocess.call(
-            ['./tests/system/containers/mysql/setup.sh'], shell=True)
+        # subprocess.call(
+        #     ['./tests/system/containers/mysql/setup.sh'], shell=True)
 
         requests.get(
             'http://127.0.0.1:8080/mysql',
@@ -143,8 +143,8 @@ class TestFlaskTrace(unittest.TestCase):
         self.container_to_delete.append(mysql_container_id)
 
     def test_postgresql_trace(self):
-        subprocess.call(
-            ['./tests/system/containers/postgresql/setup.sh'], shell=True)
+        # subprocess.call(
+        #     ['./tests/system/containers/postgresql/setup.sh'], shell=True)
 
         requests.get(
             'http://127.0.0.1:8080/postgresql',
@@ -172,8 +172,8 @@ class TestFlaskTrace(unittest.TestCase):
         self.container_to_delete.append(postgresql_container_id)
 
     def test_sqlalchemy_mysql_trace(self):
-        subprocess.call(
-            ['./tests/system/containers/mysql/setup.sh'], shell=True)
+        # subprocess.call(
+        #     ['./tests/system/containers/mysql/setup.sh'], shell=True)
 
         requests.get(
             'http://127.0.0.1:8080/sqlalchemy-mysql',
@@ -199,8 +199,8 @@ class TestFlaskTrace(unittest.TestCase):
         self.container_to_delete.append(mysql_container_id)
 
     def test_sqlalchemy_postgresql_trace(self):
-        subprocess.call(
-            ['./tests/system/containers/postgresql/setup.sh'], shell=True)
+        # subprocess.call(
+        #     ['./tests/system/containers/postgresql/setup.sh'], shell=True)
 
         requests.get(
             'http://127.0.0.1:8080/sqlalchemy-postgresql',
