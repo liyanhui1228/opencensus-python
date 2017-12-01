@@ -92,7 +92,6 @@ class Span(object):
     def __init__(
             self,
             name,
-            kind=Enum.SpanKind.SPAN_KIND_UNSPECIFIED,
             parent_span=None,
             labels=None,
             start_time=None,
@@ -105,7 +104,6 @@ class Span(object):
             same_process_as_parent_span=None,
             context_tracer=None):
         self.name = name
-        self.kind = kind
         self.parent_span = parent_span
         self.start_time = start_time
         self.end_time = end_time
@@ -213,8 +211,7 @@ def format_span_json(span):
     :returns: Formatted Span.
     """
     span_json = {
-        'display_name': _get_truncatable_str(span.name),
-        'kind': span.kind,
+        'displayName': _get_truncatable_str(span.name),
         'spanId': span.span_id,
         'startTime': span.start_time,
         'endTime': span.end_time,
@@ -228,14 +225,14 @@ def format_span_json(span):
     if parent_span_id is not None:
         span_json['parentSpanId'] = parent_span_id
 
-    if span.labels is not None:
+    if span.labels:
         span_json['labels'] = span.labels
 
     if span.stack_trace is not None:
-        span_json['stack_trace'] = span.stack_trace.format_stack_trace_json()
+        span_json['stackTrace'] = span.stack_trace.format_stack_trace_json()
 
     if span.time_events:
-        span_json['time_events'] = [
+        span_json['timeEvents'] = [
             time_event.format_time_event_json()
                 for time_event in span.time_events]
 
@@ -246,7 +243,7 @@ def format_span_json(span):
         span_json['status'] = span.status.format_status_json()
 
     if span.same_process_as_parent_span is not None:
-        span_json['same_process_as_parent_span'] = \
+        span_json['sameProcessAsParentSpan'] = \
             span.same_process_as_parent_span
 
     return span_json
