@@ -118,15 +118,21 @@ class StackTrace(object):
         self.stack_trace_hash_id = stack_trace_hash_id
 
     def add_stack_frame(self, stack_frame):
-        """Add StackFrame to frames list."""
-        self.stack_frames.append(stack_frame.format_stack_frame_json())
+        """Add StackFrame to frames list.
+
+        :type stack_frame: :class: `~opencensus.trace.stack_trace.StackFrame`
+        :param stack_frame: A single stack frame in a stack trace.
+        """
+        self.stack_frames.append(stack_frame)
 
     def format_stack_trace_json(self):
         """Convert a StackTrace object to json format."""
         stack_trace_json = {}
 
         if self.stack_frames:
-            stack_trace_json['stack_frames'] = self.stack_frames
+            stack_trace_json['stack_frames'] = [
+                stack_frame.format_stack_frame_json()
+                    for stack_frame in self.stack_frames]
 
         stack_trace_json['stack_trace_hash_id'] = self.stack_trace_hash_id
 
